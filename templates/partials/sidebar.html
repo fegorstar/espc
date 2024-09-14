@@ -1,0 +1,74 @@
+<!-- Sidebar wrapper start -->
+{% load static %}
+<nav class="sidebar-wrapper">
+
+    <!-- Sidebar content start -->
+    <div class="sidebar-tabs">
+
+        <!-- Tabs nav start -->
+        <div class="nav" role="tablist" aria-orientation="vertical">
+            <a href="#" class="logo">
+                <img class="logo-dark" style="margin-bottom: 10px;" src="{% static 'assets/images/logosmall.png' %}" width="130px" alt="logo">
+            </a>
+            <a class="nav-link active" id="home-tab" data-bs-toggle="tab" href="#tab-home" role="tab" aria-controls="tab-home" aria-selected="true">
+                <i class="icon-home2"></i>
+                <span class="nav-link-text">Dashboards</span>
+            </a>
+        </div>
+        <!-- Tabs nav end -->
+
+        <!-- Tabs content start -->
+        <div class="tab-content">
+                        
+            <!-- Chat tab -->
+            <div class="tab-pane fade show active" id="tab-home" role="tabpanel" aria-labelledby="home-tab">
+
+                <!-- Tab content header start -->
+                <div class="tab-pane-header">
+                    Dashboard
+                </div>
+                <!-- Tab content header end -->
+
+                <!-- Sidebar menu starts -->
+                <div class="sidebarMenuScroll">
+                    <div class="sidebar-menu">
+                        <ul>
+                            <li>
+                                <a href="index.html">Dashboard</a>
+                            </li>
+                            <li>
+                                <a href="analytics.html">Analytics</a>
+                            </li>
+                            <li>
+                                <a href="sales.html">Sales</a>
+                            </li>
+                            <li>
+                                <a href="crm.html">CRM</a>
+                            </li>
+                            <li>
+                                <a href="reports.html">Reports</a>
+                            </li>
+                            <li>
+                                <a href="saas.html" class="current-page">Saas</a>
+                            </li>
+                            <li>
+                                <a href="consulting.html">Consulting</a>
+                            </li>
+                            <li>
+                                <a href="profile.html">Profile</a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <!-- Sidebar menu ends -->
+
+            </div>
+
+        </div>
+        <!-- Tabs content end -->
+
+    </div>
+    <!-- Sidebar content end -->
+    
+</nav>
+<!-- Sidebar wrapper end -->

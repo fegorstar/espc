@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign Up{% endblock %}
+<head>
+    <style>
+        body {
+            display: none;
+        }
+    </style>
+</head>
+{% block content %}
+
+	<!-- Page wrapper start -->
+    <div class="page-wrapper" style="width: 100%;">
+			
+        <!-- Sidebar wrapper start -->
+        {% include 'partials/sidebar.html' %}
+        <!-- Sidebar wrapper end -->
+
+        <!-- *************
+            ************ Main container start *************
+        ************* -->
+        <div class="main-container">
+
+            <!-- Page header starts -->
+            {% include 'partials/header.html' %}
+            <!-- Page header ends -->
+
+            <!-- Content wrapper scroll start -->
+            <div class="content-wrapper-scroll">
+
+                <!-- Content wrapper start -->
+                <div class="content-wrapper">
+
+                    <!-- Row start -->
+                    <div class="row gutters">
+                        <div class="col-xl-12">
+
+                            <!-- Dashboard header start -->
+                            <div class="dashboard-header">
+                                <div class="dashboard-header-content">
+
+                                    <!-- Top Actions - DateRange and Buttons -->
+                                    <div class="d-flex justify-content-end">
+                                        <!-- Field wrapper start -->
+                                        <div class="field-wrapper m-6">
+                                           
+                                           
+                                        </div>
+                                                </div>
+
+                                    <!-- Welcome Title -->
+                                    <div class="welcome-title">
+                                        <h1>Pharmacovigilance System 
+                                        </h1>
+                                    </div>
+
+                                    <!-- Sales Tiles COntainer -->
+                                    <div class="sales-tile-container">
+                                        <div class="sales-tile">
+                                            <h1>21</h1>
+                                            <h6>Sales</h6>
+                                        </div>
+                                        <div class="sales-tile">
+                                            <h1>35</h1>
+                                            <h6>Orders</h6>
+                                        </div>
+                                        <div class="sales-tile">
+                                            <h1>60</h1>
+                                            <h6>Products</h6>
+                                        </div>
+                                        <div class="sales-tile">
+                                            <h1>29</h1>
+                                            <h6>Signups</h6>
+                                        </div>
+                                        <div class="sales-tile">
+                                            <h1>78</h1>
+                                            <h6>Reviews</h6>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Dashboard header end -->
+
+                        </div>
+                    </div>
+                    <!-- Row end -->
+
+                 
+                </div>
+                <!-- Content wrapper end -->
+
+                <!-- App Footer start -->
+                {% include 'partials/footer.html' %}
+                <!-- App footer end -->
+
+            </div>
+            <!-- Content wrapper scroll end -->
+
+        </div>
+        <!-- *************
+            ************ Main container end *************
+        ************* -->
+
+    </div>
+    <!-- Page wrapper end -->
+
+
+
+{% endblock content %}

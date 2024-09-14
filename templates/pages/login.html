@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+<!-- *************
+    ************ Login container start *************
+************* -->
+<div class="login-container">
+    <div class="container-fluid h-100">
+        <!-- Row start -->
+        <div class="row g-0 h-100">
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+                <div class="login-about">
+                    <div class="slogan">
+                        <img class="logo-dark" style="margin-bottom: 10px;" src="{% static 'assets/images/logosmall.png' %}" width="130px" alt="logo">
+                        <span style="font-weight: 600; font-family: ubuntu; text-transform: none;"><b>Pharmacovigilance system</b></span>
+                    </div>
+                    <div style="font-weight: 400; margin-top: -0.20px;" class="about-desc">
+                        This system allows both patients and medical experts to input data about drug effects, provide patients with diagnoses, and recommend drugs along with potential side effects.
+                    </div>
+                    <span><b>Designed by Opaniyan Favour Olamide</b></span>
+                </div>
+            </div>
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+                <div class="login-wrapper">
+                    <form id="login-form" action="{% url 'login' %}" method="POST">
+                        {% csrf_token %}
+                        <div class="login-screen">
+                            <div class="login-body">
+                                <h6>Welcome back,<br>Please login to your account.</h6>
+                                <div id="error-message" style="color: red; display: none; margin-bottom: 20px; text-align:center"></div> <!-- Error message container -->
+                                <div class="field-wrapper">
+                                    <input type="email" name="email" autofocus required>
+                                    <div class="field-placeholder">Email ID</div>
+                                </div>
+                                <div class="field-wrapper mb-3">
+                                    <input type="password" name="password" required>
+                                    <div class="field-placeholder">Password</div>
+                                </div>
+                                <div class="actions">
+                                    <button type="submit" id="login-button" class="btn btn-primary w-100">Login</button>
+                                </div>
+                            </div>
+                            <div class="login-footer">
+                                <span class="additional-link">No account? <a href="{% url 'signup' %}" class="btn btn-light">Sign up</a></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Row end -->
+    </div>
+</div>
+<!-- *************
+    ************ Login container end *************
+************* -->
+
+{% endblock content %}
+

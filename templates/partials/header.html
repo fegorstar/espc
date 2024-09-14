@@ -1,0 +1,129 @@
+{% load static %}
+<!-- Page header starts -->
+<div class="page-header">
+    <!-- Row start -->
+    <div class="row gutters">
+        <div class="col-xl-8 col-lg-8 col-md-8 col-sm-6 col-9">
+            <!-- Search container start -->
+            <div class="search-container">
+                <!-- Toggle sidebar start -->
+                <div class="toggle-sidebar" id="toggle-sidebar">
+                    <i class="icon-menu"></i>
+                </div>
+                <!-- Toggle sidebar end -->
+                <!-- Search input group start -->
+                <div class="ui fluid category search">
+                    <div class="ui icon input">
+                        <input class="prompt" type="text" placeholder="Search">
+                        <i class="search icon icon-search1"></i>
+                    </div>
+                    <div class="results"></div>
+                </div>
+                <!-- Search input group end -->
+            </div>
+            <!-- Search container end -->
+        </div>
+        <div class="col-xl-4 col-lg-4 col-md-4 col-sm-6 col-3">
+            <!-- Header actions start -->
+            <ul class="header-actions">
+                <li class="welcome-message" id="welcome-message">Loading...</li> <!-- Added default text -->
+                <li class="dropdown">
+                    <a href="#" id="userSettings" class="user-settings" data-toggle="dropdown" aria-haspopup="true">
+                        <span class="avatar">
+                            <img id="user-profile-image" src="{% static 'assets/img/user.svg' %}" alt="User Avatar">
+                            <span class="status busy"></span>
+                        </span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end md" aria-labelledby="userSettings">
+                        <div class="header-profile-actions">
+                            <a href="user-profile.html"><i class="icon-user1"></i>Profile</a>
+                            <a href="account-settings.html"><i class="icon-settings1"></i>Settings</a>
+                            <a href="#" id="logout-link"><i class="icon-log-out1"></i>Logout</a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+            <!-- Header actions end -->
+        </div>
+    </div>
+    <!-- Row end -->
+</div>
+<!-- Page header ends -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Default image URL
+        const defaultProfilePicture = "{% static 'assets/img/user.svg' %}";
+    
+        // Fetch user profile details
+        $.ajax({
+            url: '{% url "profile-detail" %}', // Django URL for profile details
+            type: 'GET',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}` // Authorization header with token
+            },
+            success: function(response) {
+                // Make sure the response has the correct structure
+                if (response.status === 200 && response.profile) {
+                    const profile = response.profile;
+                    const profilePicture = profile.profile_picture || defaultProfilePicture;
+                    const firstName = profile.user.first_name;
+    
+                    // Set profile picture
+                    $('#user-profile-image').attr('src', profilePicture);
+    
+                    // Display welcome message with the user's first name
+                    if (firstName) {
+                        $('#welcome-message').text(`Welcome, ${firstName}`);
+                    } else {
+                        $('#welcome-message').text('Welcome!');
+                    }
+                } else {
+                    console.error('Unexpected response structure:', response);
+                }
+            },
+            error: function(xhr) {
+                console.error('Profile fetch error:', xhr.responseText);
+                // Optionally redirect to login if profile fetch fails (e.g., not authenticated)
+                window.location.href = '/api/v1/auth/signin/';
+            }
+        });
+    
+        // Handle logout
+        $('#logout-link').on('click', function(event) {
+            event.preventDefault(); // Prevent default action
+    
+            // Retrieve tokens from local storage
+            const refreshToken = localStorage.getItem('refresh_token');
+            const accessToken = localStorage.getItem('access_token');
+    
+            $.ajax({
+                url: '{% url "logout" %}', // Django URL for logout
+                type: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}', // CSRF token
+                    'Authorization': `Bearer ${accessToken}` // Authorization header with token
+                },
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    refresh: refreshToken // Include refresh token in request body
+                }),
+                success: function(response) {
+                    if (response.error === 'Successfully logged out.') {
+                        // Clear localStorage
+                        localStorage.clear();
+    
+                        // Redirect to login page
+                        window.location.href = '/api/v1/auth/signin/';
+                    } else {
+                        console.error('Logout failed:', response);
+                    }
+                },
+                error: function(xhr) {
+                    console.error('Logout error:', xhr.responseText);
+                }
+            });
+        });
+    });
+    
+</script>

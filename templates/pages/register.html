@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Sign Up{% endblock %}
+
+{% block content %}
+
+<!-- *************
+    ************ Registration container start *************
+************* -->
+<div class="login-container">
+    <div class="container-fluid h-100">
+        <!-- Row start -->
+        <div class="row g-0 h-100">
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+                <div class="login-about">
+                    <div class="slogan">
+                        <img class="logo-dark" style="margin-bottom: 10px;" src="{% static 'assets/images/logosmall.png' %}" width="130px" alt="logo">
+                        <span style="font-weight: 600; font-family: ubuntu; text-transform: none;"><b>Pharmacovigilance system</b></span>
+                    </div>
+                    <div style="font-weight: 400; margin-top: -0.20px;" class="about-desc">
+                        This system allows both patients and medical experts to input data about drug effects, provide patients with diagnoses, and recommend drugs along with potential side effects.
+                    </div>
+                    <span><b>Designed by Opaniyan Favour Olamide</b></span>
+                </div>
+            </div>
+            <div class="col-xl-6 col-lg-6 col-md-12 col-sm-12 col-12">
+                <div class="login-wrapper">
+                    <form id="register-form" action="{% url 'register' %}" method="post">
+                        <div class="login-screen">
+                            <div class="login-body">
+                                <h6>Create your account.</h6>
+                                <div id="error-message" class="text-danger mb-3" style="display: none; text-align: center;"></div>
+                                <div class="field-wrapper">
+                                    <input type="text" name="first_name" autofocus required>
+                                    <div class="field-placeholder">First Name</div>
+                                </div>
+                                <div class="field-wrapper">
+                                    <input type="text" name="last_name" required>
+                                    <div class="field-placeholder">Last Name</div>
+                                </div>
+                                <div class="field-wrapper">
+                                    <input type="email" name="email" required>
+                                    <div class="field-placeholder">Email ID</div>
+                                </div>
+                                <div class="field-wrapper">
+                                    <input type="password" name="password" required>
+                                    <div class="field-placeholder">Password</div>
+                                </div>
+                                <div class="field-wrapper mb-3">
+                                    <input type="password" name="confirm_password" required>
+                                    <div class="field-placeholder">Confirm Password</div>
+                                </div>
+                                <div class="actions">
+                                    <button id="register-button" type="submit" class="btn btn-primary ms-auto w-100">Sign Up</button>
+                                </div>
+                            </div>
+                            <div class="login-footer">
+                                <span class="additional-link">Have an account? <a href="{% url 'signin' %}" class="btn btn-light">Login</a></span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Row end -->
+    </div>
+</div>
+<!-- *************
+    ************ Registration container end *************
+************* -->
+
+{% endblock content %}
