@@ -1,5 +1,11 @@
 from rest_framework.permissions import BasePermission
-from .exceptions import CustomException
+from rest_framework import status
+
+
+
+def generate_verification_code():
+    return str(random.randint(10000, 99999))
+
 
 class IsUser(BasePermission):
     def has_permission(self, request, view):
@@ -17,17 +23,13 @@ class IsAdmin(BasePermission):
             and request.user.user_type == 'ADMIN'
         )
 
+
 class IsSuperAdmin(BasePermission):
     def has_permission(self, request, view):
         if not request.user.is_authenticated:
-            raise CustomException(
-                detail='You do not have permission to perform this action.'
-            )
+            return False
 
-        # Check if the user is a super admin or ADMIN
         if request.user.user_type == 'ADMIN' or request.user.is_superuser:
             return True
 
-        raise CustomException(
-            detail='You do not have permission to perform this action.'
-        )
+        return False

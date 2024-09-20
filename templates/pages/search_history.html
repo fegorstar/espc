@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+  Report History
+{% endblock %}
+
+{% block content %}
+  <style>
+    .recommendation-container {
+      background-color: #ffffff;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .button-container {
+      margin-top: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    th {
+      background-color: #f8f9fa;
+    }
+
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+  </style>
+
+  <div class="page-wrapper" style="width: 100%;">
+    {% include 'partials/sidebar.html' %}
+    <div class="main-container">
+      {% include 'partials/header.html' %}
+      <div class="content-wrapper-scroll">
+        <div class="content-wrapper">
+          <div class="row gutters">
+            <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-12">
+              <div class="card">
+                <div class="card-header-lg">
+                  <h4>Report History</h4>
+                </div>
+                <div class="card-body">
+                  <div class="recommendation-container" id="report-history-container">
+                    <p><strong>Most Relevant Searches Done by User:</strong></p>
+                    <p>Loading report history...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% include 'partials/footer.html' %}
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $(document).ready(function() {
+      const accessToken = localStorage.getItem('access_token'); // Retrieve token from localStorage
+
+      if (!accessToken) {
+        // Redirect to sign-in if token is not available
+        window.location.href = '/api/v1/auth/signin/';
+      } else {
+        fetchReportHistory(accessToken);
+      }
+    });
+
+    function fetchReportHistory(token) {
+      $.ajax({
+        url: '/api/v1/administrator/report-history/', // Direct URL for the report history endpoint
+        type: 'GET',
+        contentType: 'application/json',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        success: function(data) {
+          if (data.status === 200) {
+            displayReportHistory(data.data);
+          } else {
+            $('#report-history-container').html('<p>No report history found.</p>');
+          }
+        },
+        error: function(xhr) {
+          console.error('Error fetching report history:', xhr.responseText);
+          $('#report-history-container').html('<p>Error loading report history.</p>');
+          if (xhr.status === 401) {
+            window.location.href = '/api/v1/auth/signin/'; // Redirect to sign-in on unauthorized access
+          }
+        }
+      });
+    }
+
+    function formatDate(dateString) {
+      const options = { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric', 
+        hour: 'numeric', 
+        minute: 'numeric', 
+        hour12: true,
+        timeZone: 'Africa/Lagos' // Specify the timezone for West Africa
+      };
+      return new Date(dateString).toLocaleString('en-US', options);
+    }
+
+    function displayReportHistory(reports) {
+      const container = $('#report-history-container');
+      container.empty(); // Clear loading message
+
+      // Create table structure
+      const table = `
+        <table>
+          <thead>
+            <tr>
+              <th>Diagnosis</th>
+              <th>Age</th>
+              <th>Sex</th>
+              <th>Date</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reports.map(report => `
+              <tr>
+                <td>${report.diagnosis}</td>
+                <td>${report.age}</td>
+                <td>${report.sex}</td>
+                
+                <td>${formatDate(report.updated_at)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+
+      container.append(table);
+    }
+  </script>
+{% endblock %}

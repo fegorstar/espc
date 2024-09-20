@@ -34,28 +34,13 @@
                     <div class="sidebar-menu">
                         <ul>
                             <li>
-                                <a href="index.html">Dashboard</a>
+                                <a href="{% url 'dashboard' %}">Home</a>
                             </li>
                             <li>
-                                <a href="analytics.html">Analytics</a>
-                            </li>
+                                <a href="{% url 'search-history' %}">Search History</a>
+                            </li> 
                             <li>
-                                <a href="sales.html">Sales</a>
-                            </li>
-                            <li>
-                                <a href="crm.html">CRM</a>
-                            </li>
-                            <li>
-                                <a href="reports.html">Reports</a>
-                            </li>
-                            <li>
-                                <a href="saas.html" class="current-page">Saas</a>
-                            </li>
-                            <li>
-                                <a href="consulting.html">Consulting</a>
-                            </li>
-                            <li>
-                                <a href="profile.html">Profile</a>
+                                <a href="{% url 'profile' %}">Profile</a>
                             </li>
                         </ul>
                     </div>

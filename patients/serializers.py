@@ -1,6 +1,5 @@
 from cloudinary.uploader import destroy
 from rest_framework import status
-from accounts.exceptions import CustomException
 from django.db import transaction, models
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -22,8 +21,6 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['email', 'first_name', 'last_name', 'user_type', 'is_active']
-
-
 class ProfileUpdateSerializer(serializers.ModelSerializer):
     first_name = serializers.CharField(source='user.first_name', required=True)
     last_name = serializers.CharField(source='user.last_name', required=True)
@@ -49,20 +46,20 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
 
         profile_picture = validated_data.get('profile_picture')
         if profile_picture:
+            # Ensure the previous picture is removed from Cloudinary if applicable
             if instance.profile_picture and hasattr(instance.profile_picture, 'public_id'):
-                destroy(instance.profile_picture.public_id)
+                cloudinary.uploader.destroy(instance.profile_picture.public_id)
+            # Save the new profile picture
             instance.profile_picture = profile_picture
 
         instance.state = validated_data.get('state', instance.state)
         instance.city = validated_data.get('city', instance.city)
-        instance.phone_number = validated_data.get(
-            'phone_number', instance.phone_number)
+        instance.phone_number = validated_data.get('phone_number', instance.phone_number)
         instance.nin = validated_data.get('nin', instance.nin)
 
         instance.save()
         instance.refresh_from_db()
         return instance
-
 
 class ProfileSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()

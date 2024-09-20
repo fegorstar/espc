@@ -1,34 +1,26 @@
 import cloudinary.uploader
 from django.utils import timezone
-from datetime import timedelta
 from rest_framework import serializers
 from django.db import IntegrityError, transaction
 from rest_framework.exceptions import NotFound, ValidationError
-from rest_framework.generics import get_object_or_404
 from django.db.models import Sum, F, ExpressionWrapper, DurationField, Prefetch
 from django.conf import settings
-from rest_framework import permissions, generics, status
+from rest_framework import permissions, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import ProfileUpdateSerializer, ProfileSerializer, EmailChangeSerializer, PasswordChangeSerializer
-from accounts.exceptions import CustomException
 from rest_framework.parsers import MultiPartParser, FormParser
-from accounts.permissions import IsUser
+from utils.permissions_utils import IsUser
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from django.contrib.auth import authenticate
-from django.core.exceptions import ObjectDoesNotExist
-from django.core.validators import validate_email
-from django.template.loader import render_to_string
 from accounts.models import User
-from accounts.utils import Util
-from django.utils.translation import gettext_lazy as _
 from .models import Profile
-
+from utils.response_utils import success_response, error_response
+from administrator.models import PatientReport
+from django.shortcuts import get_object_or_404
 ########################## User Profile Management ##############################################
 
-#############################  ProfileUpdateAPIView ##########################################
-
+############################# ProfileUpdateAPIView ##########################################
 
 class ProfileUpdateAPIView(APIView):
     serializer_class = ProfileUpdateSerializer
@@ -48,40 +40,26 @@ class ProfileUpdateAPIView(APIView):
     )
     def put(self, request, *args, **kwargs):
         try:
-            # Check if user is authenticated
             if not request.user.is_authenticated:
-                raise CustomException(
-                    detail="Authentication credentials were not provided.", status_code=status.HTTP_401_UNAUTHORIZED)
+                return error_response("Authentication credentials were not provided.", status_code=status.HTTP_401_UNAUTHORIZED)
 
-            # Fetch the profile based on the authenticated user
-            profile = Profile.objects.get(user=request.user)
-            data = request.data.copy()  # Make a copy of request data
-
-            serializer = self.serializer_class(
-                profile, data=data, context={'request': request})
+            profile = get_object_or_404(Profile, user=request.user)
+            data = request.data.copy()
+            serializer = self.serializer_class(profile, data=data, context={'request': request})
 
             if serializer.is_valid():
-                # Save the updated profile
                 instance = serializer.save()
-
-                # Retrieve the serialized data with properly formatted subjects
                 serialized_data = self.serializer_class(instance).data
+                return success_response("Profile updated successfully", data=serialized_data)
 
-                # Return the serialized data
-                return Response({"status": status.HTTP_200_OK, "message": "Profile updated successfully", "data": serialized_data}, status=status.HTTP_200_OK)
+            return error_response("Invalid data", validation_errors=serializer.errors)
 
-            return Response({"status": status.HTTP_400_BAD_REQUEST, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return error_response(str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        except Profile.DoesNotExist:
-            raise CustomException(detail="Profile not found",
-                                  status_code=status.HTTP_404_NOT_FOUND)
-
-        except CustomException as e:
-            return Response({"error": e.detail['error']}, status=e.status_code)
 ################################################################################################
 
 ###################### ProfileDetailAPIView ###############################################
-
 
 class ProfileDetailAPIView(APIView):
     permission_classes = [IsUser]
@@ -97,27 +75,17 @@ class ProfileDetailAPIView(APIView):
     )
     def get(self, request, *args, **kwargs):
         try:
-            user = request.user
-            profile = Profile.objects.get(user=user)
+            profile = get_object_or_404(Profile, user=request.user)
             serializer = ProfileSerializer(profile)
+            return success_response("Profile details retrieved successfully", data=serializer.data)
 
-            # Create the response data
-            response_data = {
-                "status": status.HTTP_200_OK,
-                "profile": serializer.data
-            }
-            return Response(response_data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return error_response(str(e), status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        except Profile.DoesNotExist:
-            raise CustomException(detail="Profile not found",
-                                  status_code=status.HTTP_404_NOT_FOUND)
-
-        except CustomException as e:
-            return Response({"error": e.detail['error']}, status=e.status_code)
-###############################################################################################################
-
+################################################################################################
 
 ####################### DeactivateAccountAPIView #########################################
+
 class DeactivateAccountAPIView(APIView):
     permission_classes = [IsUser]
 
@@ -131,23 +99,19 @@ class DeactivateAccountAPIView(APIView):
         }
     )
     def patch(self, request, *args, **kwargs):
-        # Get the authenticated user
         user = request.user
-
-        # Check if the user ID in the URL matches the authenticated user's ID
         user_id = kwargs.get('user_id')
+        
         if str(user_id) != str(user.id):
-            return Response({'error': 'You do not have permission to deactivate this account.'}, status=status.HTTP_403_FORBIDDEN)
+            return error_response("You do not have permission to deactivate this account.", status_code=status.HTTP_403_FORBIDDEN)
 
-        # Deactivate the user's account
         user.is_active = False
         user.save()
+        return success_response("User deactivated successfully")
 
-        return Response({'success': True, 'message': 'User deactivated successfully'}, status=status.HTTP_200_OK)
-############################################################################################################
+################################################################################################
 
 ##################### EmailChangeAPIView #########################################
-
 
 class EmailChangeAPIView(APIView):
     serializer_class = EmailChangeSerializer
@@ -171,10 +135,10 @@ class EmailChangeAPIView(APIView):
             new_email = serializer.validated_data['new_email']
             user.email = new_email
             user.save()
-            return Response({"detail": "Email changed successfully"}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-##################################################################################################################
+            return success_response("Email changed successfully")
+        return error_response("Invalid data", validation_errors=serializer.errors)
 
+##################################################################################################################
 
 ############################### PasswordChangeAPIView ##############################
 
@@ -200,9 +164,67 @@ class PasswordChangeAPIView(APIView):
             old_password = serializer.validated_data['old_password']
             new_password = serializer.validated_data['new_password']
             if not user.check_password(old_password):
-                return Response({"old_password": ["Old password is not correct"]}, status=status.HTTP_400_BAD_REQUEST)
+                return error_response("Old password is not correct", validation_errors={"old_password": ["Old password is not correct"]})
             user.set_password(new_password)
             user.save()
-            return Response({"detail": "Password changed successfully"}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-######################################################################################################
+            return success_response("Password changed successfully")
+        return error_response("Invalid data", validation_errors=serializer.errors)
+
+################################################################################################
+
+############################## ReportHistoryAPIView ###########################################################
+class ReportHistoryAPIView(APIView):
+    permission_classes = [IsUser]
+
+    @swagger_auto_schema(
+        tags=["Patient Diagnosis Management"],
+        operation_summary="Get Recent User Report History",
+        operation_description="Retrieve the most recent report analyses of the user.",
+        responses={
+            200: openapi.Response(
+                description="Recent report history retrieved successfully.",
+                schema=openapi.Schema(
+                    type="object",
+                    properties={
+                        "status_code": openapi.Schema(type="integer", example=200),
+                        "message": openapi.Schema(type="string", example="Recent report history retrieved successfully."),
+                        "data": openapi.Schema(
+                            type="array",
+                            items=openapi.Schema(
+                                type="object",
+                                properties={
+                                    "id": openapi.Schema(type="integer", example=1),
+                                    "created_at": openapi.Schema(type="string", format="date-time"),
+                                    "diagnosis": openapi.Schema(type="string", example="Flu"),
+                                    "age": openapi.Schema(type="integer", example=30),
+                                    "sex": openapi.Schema(type="string", example="Male"),
+                                }
+                            )
+                        )
+                    }
+                )
+            ),
+            404: openapi.Response(description="No report history found"),
+            401: openapi.Response(description="Unauthorized"),
+        }
+    )
+    def get(self, request, *args, **kwargs):
+        reports = PatientReport.objects.filter(patient=request.user).order_by('-created_at')[:5]
+
+        if not reports.exists():
+            return error_response("No report history found", status_code=status.HTTP_404_NOT_FOUND)
+
+        report_data = [
+            {
+                "id": report.id,
+                "created_at": report.created_at,
+                "diagnosis": report.diagnosis.name if report.diagnosis else "Not diagnosed",
+                "age": report.age,
+                "sex": report.sex,
+            }
+            for report in reports
+        ]
+
+        return success_response("Recent report history retrieved successfully.", data=report_data)
+
+###################################################################################################################################

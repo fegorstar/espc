@@ -10,6 +10,8 @@ urlpatterns = [
     path('signin/', views.signin, name='signin'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('signup/', views.signup, name='signup'),
+    path('search-history/', views.search_history, name='search-history'),
+    path('profile/', views.profile, name='profile'),
 
     #endpoints
     path('register/', views.RegisterView.as_view(), name='register'),
