@@ -444,77 +444,76 @@
 
     function submitDrugSafetyCheck() {
       const drugSideEffects = {};
-  
+
       $('.side-effect').each(function() {
-          const drugId = $(this).data('drug-id');
-          if (!drugSideEffects[drugId]) {
-              drugSideEffects[drugId] = [];
-          }
-          if ($(this).is(':checked')) {
-              drugSideEffects[drugId].push($(this).val());
-          }
+        const drugId = $(this).data('drug-id');
+        if (!drugSideEffects[drugId]) {
+          drugSideEffects[drugId] = [];
+        }
+        if ($(this).is(':checked')) {
+          drugSideEffects[drugId].push($(this).val());
+        }
       });
-  
+
       const accessToken = localStorage.getItem('access_token');
-  
+
       $.ajax({
-          url: '/api/v1/administrator/check-drug-safety/',
-          type: 'POST',
-          contentType: 'application/json',
-          headers: {
-              'Authorization': `Bearer ${accessToken}`
-          },
-          data: JSON.stringify({ drug_side_effects: drugSideEffects }),
-          success: function(response) {
-              if (response.status === 200) {
-                  recommendedDrugs = response.data.drugs;
-                  // Store patient info for use in displayRecommendations
-                  const patientInfo = {
-                      fullName: response.data.patient_full_name,
-                      age: response.data.age,
-                      sex: response.data.sex
-                  };
-                  displayRecommendations(patientInfo);
-                  showTab(4);
-              } else {
-                  console.error('Error in drug safety check:', response.message);
-              }
-          },
-          error: function(xhr) {
-              console.error('Error submitting drug safety check:', xhr.responseText);
-              alert('Failed to check drug safety. Please try again.');
-          }
+        url: '/api/v1/administrator/check-drug-safety/',
+        type: 'POST',
+        contentType: 'application/json',
+        headers: {
+            'Authorization': `Bearer ${accessToken}`
+        },
+        data: JSON.stringify({ drug_side_effects: drugSideEffects }),
+        success: function(response) {
+            if (response.status === 200) {
+                recommendedDrugs = response.data.drugs;
+                // Store patient info for use in displayRecommendations
+                const patientInfo = {
+                    fullName: response.data.patient_full_name,
+                    age: response.data.age,
+                    sex: response.data.sex
+                };
+                displayRecommendations(patientInfo);
+                showTab(4);
+            } else {
+                console.error('Error in drug safety check:', response.message);
+            }
+        },
+        error: function(xhr) {
+          console.error('Error submitting drug safety check:', xhr.responseText);
+          alert('Failed to check drug safety. Please try again.');
+        }
       });
-  }
-  
-  function displayRecommendations(patientInfo) {
+    }
+
+    function displayRecommendations() {
       const recommendationContainer = $('#drugRecommendations');
       recommendationContainer.empty();
-  
+      
       // Fill patient info
-      $('#patientFullName').text(patientInfo.fullName);
-      $('#patientAge').text(patientInfo.age);
-      $('#patientSex').text(patientInfo.sex);
+      $('#patientFullName').text('Pius Abighe-simon'); // Example name
+      $('#patientAge').text('12'); // Example age
+      $('#patientSex').text('Male'); // Example sex
       $('#diagnosisName').text(diagnosisData ? diagnosisData.name : 'N/A');
       $('#symptomsSelected').text(selectedSymptoms.map(symptom => symptom.name).join(', '));
-  
+      
       // Check if there are any recommendations
       if (recommendedDrugs.length === 0) {
-          recommendationContainer.append('<p>No recommendations found.</p>');
-          return;
+        recommendationContainer.append('<p>No recommendations found.</p>');
+        return;
       }
-  
+    
       // Display drug recommendations
       recommendedDrugs.forEach(drug => {
-          recommendationContainer.append(`
-              <div>
-                  <h5>${drug.name}</h5>
-                  <p><strong>Description:</strong> ${drug.description}</p>
-                  <p><strong>ADR History:</strong> ${drug.ADR_History}</p>
-              </div>
-          `);
+        recommendationContainer.append(`
+          <div>
+            <h5>${drug.name}</h5>
+            <p><strong>Description:</strong> ${drug.description}</p>
+            <p><strong>ADR History:</strong> ${drug.ADR_History}</p>
+          </div>
+        `);
       });
-  }
-  
+    }
   </script>
 {% endblock %}
