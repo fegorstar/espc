@@ -11,16 +11,16 @@
       color: red;
       animation: blinking 1s infinite;
     }
-    
+
     @keyframes blinking {
       0% { opacity: 1; }
       50% { opacity: 0; }
       100% { opacity: 1; }
     }
-    
+
     .tab { display: none; }
     .tab.active { display: block; }
-    
+
     .tab-button {
       background-color: #f0f0f0;
       border: none;
@@ -28,7 +28,7 @@
       margin-right: 5px;
       cursor: pointer;
     }
-    
+
     .tab-button:hover {
       background-color: #e0e0e0;
     }
@@ -61,7 +61,7 @@
       margin-bottom: 10px;
     }
 
-    .patient-info, .diagnosis-info, .drug-info {
+    .patient-info, .drug-info {
       margin-bottom: 20px;
     }
 
@@ -88,20 +88,21 @@
                   <h2 class="text-left">Pharmacovigilance System</h2>
                   <hr />
                   <h3 class="text-left blinking">Symptom Checker</h3>
-                  <p class="text-left">Identify possible conditions and treatment related to your symptoms.</p>
-
+                 
                   <!-- Tabs Navigation -->
-                  <div>
-                    <button class="tab-button" onclick="showTab(1)">Step 1: Personal Info & Symptoms</button>
-                    <button class="tab-button" onclick="showTab(2)">Step 2: Confirmation</button>
-                    <button class="tab-button" onclick="showTab(3)">Step 3: View Recommendations</button>
+                  <div style="padding-bottom: 20px;">
+                    <button class="tab-button" onclick="showTab(1)">Step 1: Info & Symptoms</button>
+                    <button class="tab-button" onclick="showTab(2)">Step 2: Diagnosis</button>
+                    <button class="tab-button" onclick="showTab(3)">Step 3: Drug Safety Check</button>
+                    <button class="tab-button" onclick="showTab(4)">Step 4: Drug Recommendations</button>
                   </div>
 
                   <!-- Step 1: Personal Info and Symptoms -->
                   <div class="tab active mb-3" id="step1">
+                    <p class="text-left">Identify possible conditions and treatment related to your symptoms.</p>
                     <div class="row gutters">
                       <div class="col-xl-6">
-                        <div class="field-wrapper ">
+                        <div class="field-wrapper">
                           <input type="number" id="age" class="form-control" placeholder="Enter Age" required />
                           <div class="field-placeholder">Age <span class="text-danger">*</span></div>
                         </div>
@@ -135,24 +136,52 @@
                     <button class="btn btn-primary mt-3" id="step1Btn" disabled onclick="nextStep()">Continue</button>
                   </div>
 
-                  <!-- Step 2: Confirmation -->
-                  <div class="tab mb-3" id="step2" >
-                    <br>
-                    <h3 class="">Confirm and View Recommendations</h3>
-                    <p class="">Please confirm your details before proceeding.</p>
-
-                    <div id="confirmationDetails" class="text-left mb-3"></div>
-
+                  <!-- Step 2: Diagnosis -->
+                  <div class="tab mb-3" id="step2">
+                    <h3 class="text-left mb-3">Diagnosis of Symptoms</h3>
+                    <p>We have identified the following condition related to your symptoms:</p>
+                    <div id="diagnosisDetails" class="text-left mb-3"></div>
                     <button class="btn btn-secondary mt-3" onclick="prevStep()">Back</button>
-                    <button class="btn btn-primary mt-3" id="step3Btn" disabled onclick="submitForm()">View Drug Recommendations</button>
+                    <button class="btn btn-primary mt-3" id="step2Btn" onclick="nextStep()">Continue</button>
                   </div>
 
-                  <!-- Step 3: Recommendations -->
-                  <div class="tab" id="step3">
-                    <h3 class="text-left mb-3">Recommendations</h3>
-                    <div id="recommendationDetails" class="recommendation-container text-left mb-3"></div>
+                  <!-- Step 3: Drug Safety Check -->
+                  <div class="tab mb-3" id="step3">
+                    <h3 class="">Drug Recommendations Ready</h3>
+                    <p>We’ve analyzed your input and have tailored drug recommendations for you. Let’s check for any side effects you may have experienced.</p>
+                    
+                    <h4>Side Effect Check</h4>
+                    <p>Please let us know if you’ve experienced any of the following side effects from these drugs.</p>
+                    
+                    <div id="sideEffectQuestions" class="text-left mb-3"></div>
+
                     <button class="btn btn-secondary mt-3" onclick="prevStep()">Back</button>
+                    <button class="btn btn-primary mt-3" id="step3Btn" onclick="submitDrugSafetyCheck()">View Drug Recommendations</button>
                   </div>
+
+                  <!-- Step 4: Recommendations -->
+                  <!-- Step 4: Recommendations -->
+<div class="tab" id="step4">
+  <h3 class="text-left mb-3">Recommendations</h3>
+  <div id="recommendationDetails" class="recommendation-container text-left mb-3">
+    <!-- Patient Info -->
+    <div class="patient-info">
+      <h4>Patient Information</h4>
+      <p><strong>Full Name:</strong> <span id="patientFullName"></span></p>
+      <p><strong>Age:</strong> <span id="patientAge"></span></p>
+      <p><strong>Sex:</strong> <span id="patientSex"></span></p>
+      <p><strong>Diagnosis:</strong> <span id="diagnosisName"></span></p>
+      <p><strong>Symptoms Selected:</strong> <span id="symptomsSelected"></span></p>
+    </div>
+    <!-- Drug Recommendations -->
+    <div class="drug-info">
+      <h4>Recommended Drugs</h4>
+      <div id="drugRecommendations"></div>
+    </div>
+  </div>
+  <button class="btn btn-secondary mt-3" onclick="prevStep()">Back</button>
+</div>
+
                 </div>
               </div>
             </div>
@@ -168,142 +197,139 @@
   <script>
     let selectedSymptoms = [];
     let allSymptoms = [];
+    let recommendedDrugs = [];
+    let diagnosisData = null;
 
     function fetchSymptoms() {
-        const accessToken = localStorage.getItem('access_token');
-        $.ajax({
-            url: '/api/v1/administrator/symptoms/',
-            type: 'GET',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`
-            },
-            success: function(response) {
-                if (response.status === 200) {
-                    allSymptoms = response.data;
-                    populateSymptomSearch();
-                } else {
-                    console.error('Failed to retrieve symptoms:', response.message);
-                }
-            },
-            error: function(xhr) {
-                console.error('Symptoms fetch error:', xhr.responseText);
-                if (xhr.status === 401) {
-                    window.location.href = '/api/v1/auth/signin/';
-                }
-            }
-        });
+      const accessToken = localStorage.getItem('access_token');
+      $.ajax({
+        url: '/api/v1/administrator/symptoms/',
+        type: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        success: function(response) {
+          if (response.status === 200) {
+            allSymptoms = response.data;
+            populateSymptomSearch();
+          } else {
+            console.error('Failed to retrieve symptoms:', response.message);
+          }
+        },
+        error: function(xhr) {
+          console.error('Symptoms fetch error:', xhr.responseText);
+          if (xhr.status === 401) {
+            window.location.href = '/api/v1/auth/signin/';
+          }
+        }
+      });
     }
 
     function populateSymptomSearch() {
-        $('#symptomSearch').on('input', function() {
-            const query = $(this).val().toLowerCase();
-            const filteredSymptoms = allSymptoms.filter(symptom => symptom.name.toLowerCase().includes(query));
-            displaySymptomResults(filteredSymptoms);
-            validateForm(); // Validate on input
-        });
+      $('#symptomSearch').on('input', function() {
+        const query = $(this).val().toLowerCase();
+        const filteredSymptoms = allSymptoms.filter(symptom => symptom.name.toLowerCase().includes(query));
+        displaySymptomResults(filteredSymptoms);
+        validateForm();
+      });
     }
 
     function displaySymptomResults(symptoms) {
-        const resultsContainer = $('#symptomResults');
-        resultsContainer.empty();
+      const resultsContainer = $('#symptomResults');
+      resultsContainer.empty();
 
-        symptoms.forEach(symptom => {
-            const symptomElement = $(`
-                <div class="symptom-item">
-                    <span>${symptom.name}</span>
-                    <button class="btn btn-sm btn-secondary select-symptom" data-id="${symptom.id}">Select</button>
-                </div>
-            `);
-            resultsContainer.append(symptomElement);
-        });
+      symptoms.forEach(symptom => {
+        const symptomElement = $(`
+          <div class="symptom-item">
+            <span>${symptom.name}</span>
+            <button class="btn btn-sm btn-secondary select-symptom" data-id="${symptom.id}">ADD</button>
+          </div>
+        `);
+        resultsContainer.append(symptomElement);
+      });
 
-        resultsContainer.toggleClass('dropdown-hidden', symptoms.length === 0);
+      resultsContainer.toggleClass('dropdown-hidden', symptoms.length === 0);
 
-        $('.select-symptom').off('click').on('click', function() {
-            const symptomId = $(this).data('id');
-            const symptomName = $(this).siblings('span').text();
-            addSymptom(symptomId, symptomName);
-            validateForm(); // Validate after selection
-        });
+      $('.select-symptom').off('click').on('click', function() {
+        const symptomId = $(this).data('id');
+        const symptomName = $(this).siblings('span').text();
+        addSymptom(symptomId, symptomName);
+        validateForm();
+      });
     }
 
     function addSymptom(id, name) {
-        if (!selectedSymptoms.some(symptom => symptom.id === id)) {
-            selectedSymptoms.push({ id, name });
-            renderSelectedSymptoms();
-        }
+      if (!selectedSymptoms.some(symptom => symptom.id === id)) {
+        selectedSymptoms.push({ id, name });
+        renderSelectedSymptoms();
+      }
     }
 
     function renderSelectedSymptoms() {
-        const selectedContainer = $('#selectedSymptoms');
-        selectedContainer.empty();
+      const selectedContainer = $('#selectedSymptoms');
+      selectedContainer.empty();
 
-        selectedSymptoms.forEach(symptom => {
-            const symptomElement = $(`
-                <div class="selected-symptom">
-                    <span>${symptom.name}</span>
-                    <button class="btn btn-sm btn-danger remove-symptom" data-id="${symptom.id}">Remove</button>
-                </div>
-            `);
-            selectedContainer.append(symptomElement);
-        });
+      selectedSymptoms.forEach(symptom => {
+        const symptomElement = $(`
+          <div class="selected-symptom">
+            <span>${symptom.name}</span>
+            <button class="btn btn-sm btn-danger remove-symptom" data-id="${symptom.id}">Remove</button>
+          </div>
+        `);
+        selectedContainer.append(symptomElement);
+      });
 
-        $('.remove-symptom').off('click').on('click', function() {
-            const symptomId = $(this).data('id');
-            selectedSymptoms = selectedSymptoms.filter(symptom => symptom.id !== symptomId);
-            renderSelectedSymptoms();
-            validateForm(); // Validate after removal
-        });
-
-        // Enable the continue button if there are selected symptoms
+      $('.remove-symptom').off('click').on('click', function() {
+        const symptomId = $(this).data('id');
+        selectedSymptoms = selectedSymptoms.filter(symptom => symptom.id !== symptomId);
+        renderSelectedSymptoms();
         validateForm();
+      });
+
+      validateForm();
     }
 
     function validateForm() {
       const age = $('#age').val();
       const genderSelected = $('input[name="gender"]:checked').length > 0;
-  
-      // Enable the continue button for Step 1 if all conditions are met
+
       const step1Btn = document.getElementById('step1Btn');
       step1Btn.disabled = !(age && genderSelected && selectedSymptoms.length > 0);
-  
-      // Enable the View Recommendations button if symptoms are present and confirmation details are populated
-      const step3Btn = document.getElementById('step3Btn');
-      step3Btn.disabled = !(selectedSymptoms.length > 0);
-  }
+    }
 
     $(document).on('click', function(event) {
-        const target = $(event.target);
-        if (!target.closest('#symptomSearch').length && !target.closest('#symptomResults').length) {
-            $('#symptomResults').addClass('dropdown-hidden');
-        }
+      const target = $(event.target);
+      if (!target.closest('#symptomSearch').length && !target.closest('#symptomResults').length) {
+        $('#symptomResults').addClass('dropdown-hidden');
+      }
     });
 
     fetchSymptoms();
 
     function showTab(step) {
-      const step1Btn = document.getElementById('step1Btn');
-      const step3Btn = document.getElementById('step3Btn');
-
-      if (step === 2 && step1Btn.disabled) {
-        return; // Prevent moving to Step 2 if not valid
-      }
-      if (step === 3 && step3Btn.disabled) {
-        return; // Prevent moving to Step 3 if not valid
-      }
-
       document.querySelectorAll('.tab').forEach((tab) => tab.classList.remove('active'));
       document.getElementById('step' + step).classList.add('active');
-
+  
       if (step === 2) {
-        displayConfirmationDetails(); // Show user details in Step 2
+        displayDiagnosis(diagnosisData);
       } else if (step === 3) {
-        displayRecommendations(); // Show recommendations in Step 3
+        fetchSideEffectQuestions();
+      } else if (step === 4) {
+        displayRecommendations();
       }
     }
-
+  
     function nextStep() {
-      showTab(2);
+      const currentStep = $('.tab.active').attr('id');
+      if (currentStep === 'step1') {
+        if (selectedSymptoms.length === 0) {
+          alert('Please select at least one symptom.');
+          return;
+        }
+        fetchDrugRecommendations();
+      } else if (currentStep === 'step2') {
+        showTab(3);
+      }
     }
 
     function prevStep() {
@@ -312,86 +338,175 @@
         showTab(1);
       } else if (currentStep === 'step3') {
         showTab(2);
+      } else if (currentStep === 'step4') {
+        showTab(3);
       }
     }
 
-    function displayConfirmationDetails() {
-      const age = $('#age').val();
-      const gender = $('input[name="gender"]:checked').val();
-      const symptomsList = selectedSymptoms.map(symptom => symptom.name).join(', ');
-
-      $('#confirmationDetails').html(`
-          <p><strong>Age:</strong> ${age}</p>
-          <p><strong>Gender:</strong> ${gender}</p>
-          <p><strong>Symptoms:</strong> ${symptomsList}</p>
-      `);
-
-      // Enable the View Recommendations button if details are present
-      validateForm();
-    }
-
-    function submitForm() {
+    function fetchDrugRecommendations() {
       const age = $('#age').val();
       const gender = $('input[name="gender"]:checked').val();
       const symptomsIds = selectedSymptoms.map(symptom => symptom.id);
       const accessToken = localStorage.getItem('access_token');
+      
+      $.ajax({
+        url: '/api/v1/administrator/report-diagnosis/',
+        type: 'POST',
+        contentType: 'application/json',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        data: JSON.stringify({
+          age: age,
+          sex: gender,
+          symptoms: symptomsIds
+        }),
+        success: function(response) {
+          if (response.data.diagnosis) {
+            diagnosisData = response.data.diagnosis;
+            recommendedDrugs = response.data.drugs_recommended || [];
+            displayDiagnosis(diagnosisData);
+            showTab(2);
+          } else {
+            alert('No diagnosis found. Please try different symptoms.');
+          }
+        },
+        error: function(xhr) {
+          console.error('Error generating diagnosis:', xhr.responseText);
+          alert('Failed to generate diagnosis. Please try again.');
+        }
+      });
+    }
+    
+    
+    function displayDiagnosis(data) {
+      if (!data) return;
+    
+      const { name, description, symptoms } = data;
+      const symptomsList = symptoms.map(symptom => symptom.name).join(', ');
+    
+      $('#diagnosisDetails').html(`
+        <p><strong>Diagnosis:</strong> ${name}</p>
+        <p><strong>Description:</strong> ${description}</p>
+        <p><strong>Symptoms:</strong> ${symptomsList}</p>
+      `);
+    }
+
+   
+    function fetchSideEffectQuestions() {
+      const accessToken = localStorage.getItem('access_token');
 
       $.ajax({
-          url: '/api/v1/administrator/report-diagnosis/',
-          type: 'POST',
-          contentType: 'application/json',
-          headers: {
-              'Authorization': `Bearer ${accessToken}`
-          },
-          data: JSON.stringify({
-              age: age,
-              sex: gender,
-              symptoms: symptomsIds
-          }),
-          success: function(response) {
-              alert('Diagnosis generated successfully.');
-              displayRecommendations(response.data);
-              showTab(3);
-          },
-          error: function(xhr) {
-              console.error('Error generating diagnosis:', xhr.responseText);
-              alert('Failed to generate diagnosis. Please try again.');
+        url: '/api/v1/administrator/side-effect-questions/',
+        type: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        success: function(response) {
+          if (response.status === 200) {
+            displaySideEffectQuestions(response.data);
+          } else {
+            console.error('Failed to retrieve side effect questions:', response.message);
           }
+        },
+        error: function(xhr) {
+          console.error('Error fetching side effect questions:', xhr.responseText);
+          if (xhr.status === 401) {
+            window.location.href = '/api/v1/auth/signin/';
+          }
+        }
       });
     }
 
-    function displayRecommendations(data) {
-      const { patient_info, diagnosis, drugs_recommended } = data;
-      let recommendationsHtml = `
-          <div class="patient-info">
-              <h4 class="recommendation-header">Patient Information:</h4>
-              <p><strong>Name:</strong> ${patient_info.full_name}</p>
-              <p><strong>Age:</strong> ${patient_info.age}</p>
-              <p><strong>Gender:</strong> ${patient_info.sex}</p>
-          </div>
-          <div class="diagnosis-info">
-              <h4 class="recommendation-header">Diagnosis:</h4>
-              <p><strong>Name:</strong> ${diagnosis.name}</p>
-              <p><strong>Description:</strong> ${diagnosis.description}</p>
-          </div>
-          <div class="drug-info">
-              <h4 class="recommendation-header">Recommended Drugs and its Adverse Drug Reactions (ADR):</h4>
-      `;
+    function displaySideEffectQuestions(drugs) {
+      const container = $('#sideEffectQuestions');
+      container.empty();
+    
+      drugs.forEach(drug => {
+        const drugElement = $('<div class="side-effect-group"></div>').attr('data-drug-id', drug.drug_id);
+        drugElement.append(`<strong>${drug.drug_name}</strong><br />`);
+    
+        drug.questions.forEach(question => {
+          const questionElement = $(`<p>${question.question_text}</p>`);
+          drugElement.append(questionElement); // Move this line here to separate the question from the options
+          question.options.forEach(option => {
+            questionElement.append(`
+              <label style="display: block;"><input type="checkbox" class="side-effect" data-drug-id="${drug.drug_id}" value="${option}"> ${option}</label>
+            `);
+          });
+          drugElement.append(questionElement); // Append options to the question element
+        });
+    
+        container.append(drugElement);
+      });
+    }
+    
 
-      drugs_recommended.forEach(drug => {
-          recommendationsHtml += `
-              <div>
-                  <strong>${drug.name}</strong>: ${drug.description} (ADR: ${drug.ADR_History})
-              </div>
-          `;
+    function submitDrugSafetyCheck() {
+      const drugSideEffects = {};
+
+      $('.side-effect').each(function() {
+        const drugId = $(this).data('drug-id');
+        if (!drugSideEffects[drugId]) {
+          drugSideEffects[drugId] = [];
+        }
+        if ($(this).is(':checked')) {
+          drugSideEffects[drugId].push($(this).val());
+        }
       });
 
-      recommendationsHtml += `
-              </div>
-          </div>
-      `;
+      const accessToken = localStorage.getItem('access_token');
 
-      $('#recommendationDetails').html(recommendationsHtml);
+      $.ajax({
+        url: '/api/v1/administrator/check-drug-safety/',
+        type: 'POST',
+        contentType: 'application/json',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        data: JSON.stringify({ drug_side_effects: drugSideEffects }),
+        success: function(response) {
+          if (response.status === 200) {
+            recommendedDrugs = response.data.drugs;
+            showTab(4);
+          } else {
+            console.error('Error in drug safety check:', response.message);
+          }
+        },
+        error: function(xhr) {
+          console.error('Error submitting drug safety check:', xhr.responseText);
+          alert('Failed to check drug safety. Please try again.');
+        }
+      });
+    }
+
+    function displayRecommendations() {
+      const recommendationContainer = $('#drugRecommendations');
+      recommendationContainer.empty();
+      
+      // Fill patient info
+      $('#patientFullName').text('Pius Abighe-simon'); // Example name
+      $('#patientAge').text('12'); // Example age
+      $('#patientSex').text('Male'); // Example sex
+      $('#diagnosisName').text(diagnosisData ? diagnosisData.name : 'N/A');
+      $('#symptomsSelected').text(selectedSymptoms.map(symptom => symptom.name).join(', '));
+      
+      // Check if there are any recommendations
+      if (recommendedDrugs.length === 0) {
+        recommendationContainer.append('<p>No recommendations found.</p>');
+        return;
+      }
+    
+      // Display drug recommendations
+      recommendedDrugs.forEach(drug => {
+        recommendationContainer.append(`
+          <div>
+            <h5>${drug.name}</h5>
+            <p><strong>Description:</strong> ${drug.description}</p>
+            <p><strong>ADR History:</strong> ${drug.ADR_History}</p>
+          </div>
+        `);
+      });
     }
   </script>
 {% endblock %}
