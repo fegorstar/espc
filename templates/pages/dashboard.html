@@ -466,20 +466,26 @@
         },
         data: JSON.stringify({ drug_side_effects: drugSideEffects }),
         success: function(response) {
-            if (response.status === 200) {
-                recommendedDrugs = response.data.drugs;
-                // Store patient info for use in displayRecommendations
-                const patientInfo = {
-                    fullName: response.data.patient_full_name,
-                    age: response.data.age,
-                    sex: response.data.sex
-                };
-                displayRecommendations(patientInfo);
-                showTab(4);
-            } else {
-                console.error('Error in drug safety check:', response.message);
-            }
-        },
+          if (response.status === 200) {
+              if (response.data.drug_count === 0 || response.data.drugs === null) {
+                  alert(`No diagnosis found. We cannot recommend any drugs because of your side effects.`);
+                  console.error('No drug recommendations:', response.message);
+              } else {
+                  recommendedDrugs = response.data.drugs;
+                  const patientInfo = {
+                      fullName: response.data.patient_full_name,
+                      age: response.data.age,
+                      sex: response.data.sex
+                  };
+                  displayRecommendations(patientInfo);
+                  showTab(4);
+              }
+          } else {
+              alert('No diagnosis found. Unfortunately, we are unable to recommend any drugs based on the side effects you provided');
+              console.error('Error in drug safety check:', response.message);
+          }
+      },
+      
         error: function(xhr) {
           console.error('Error submitting drug safety check:', xhr.responseText);
           alert('Failed to check drug safety. Please try again.');

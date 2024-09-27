@@ -29,3 +29,4 @@ class PatientReportSerializer(serializers.ModelSerializer):
         model = PatientReport
         fields = ['id', 'patient', 'age', 'sex', 'symptoms', 'diagnosis', 'drugs_recommended', 'created_at', 'updated_at']
         read_only_fields = ['patient', 'diagnosis', 'drugs_recommended', 'created_at', 'updated_at']
+        
